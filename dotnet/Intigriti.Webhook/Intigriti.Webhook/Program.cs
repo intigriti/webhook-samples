@@ -38,7 +38,11 @@ app.MapPost("/", async (HttpContext httpContext, ILogger<Program> logger) =>
 
     if (submissionEvent == null) return Results.BadRequest();
 
-    var payload = JsonSerializer.Serialize(submissionEvent, options);
+    var payload = JsonSerializer.Serialize(submissionEvent, new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true
+    });
 
     logger.LogInformation("Received event {eventType} \n {payload}", submissionEvent.GetType().Name, payload);
 

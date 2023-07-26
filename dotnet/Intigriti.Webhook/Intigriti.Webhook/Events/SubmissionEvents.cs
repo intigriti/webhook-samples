@@ -1,4 +1,6 @@
-﻿namespace Intigriti.Webhook.Events;
+﻿using System.Text.Json.Serialization;
+
+namespace Intigriti.Webhook.Events;
 
 internal abstract record Enumeration
 {
@@ -9,12 +11,19 @@ internal abstract record Enumeration
 internal record Severity : Enumeration
 {
     public required string? Vector { get; init; }
+    public required decimal? Score { get; init; }
 }
 
 internal record Status : Enumeration;
 
 internal record CloseReason : Enumeration;
 
+
+[JsonDerivedType(typeof(TestEvent))]
+[JsonDerivedType(typeof(SubmissionCreated))]
+[JsonDerivedType(typeof(SubmissionSeverityChanged))]
+[JsonDerivedType(typeof(SubmissionStatusChanged))]
+[JsonDerivedType(typeof(SubmissionMessagePlaced))]
 internal abstract record SubmissionEvent
 {
     public required Guid ProgramId { get; init; }
