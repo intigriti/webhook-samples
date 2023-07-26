@@ -11,7 +11,6 @@ builder.Logging
     .ClearProviders()
     .AddSerilog(logger);
 
-
 builder.Services.Configure<Settings>(builder.Configuration);
 
 var app = builder.Build();
@@ -29,16 +28,19 @@ app.MapPost("/", async (HttpContext httpContext, ILogger<Program> logger) =>
 
     SubmissionEvent? submissionEvent =  eventType switch
     {
+        nameof(TestEvent) => await JsonSerializer.DeserializeAsync<TestEvent>(httpContext.Request.Body, options),
         nameof(SubmissionCreated) => await JsonSerializer.DeserializeAsync<SubmissionCreated>(httpContext.Request.Body, options),
         nameof(SubmissionSeverityChanged) => await JsonSerializer.DeserializeAsync<SubmissionSeverityChanged>(httpContext.Request.Body, options),
         nameof(SubmissionStatusChanged) => await JsonSerializer.DeserializeAsync<SubmissionStatusChanged>(httpContext.Request.Body, options),
-        nameof(SubmissionMessagePlaced) => await JsonSerializer.DeserializeAsync<SubmissionCreated>(httpContext.Request.Body, options),
+        nameof(SubmissionMessagePlaced) => await JsonSerializer.DeserializeAsync<SubmissionMessagePlaced>(httpContext.Request.Body, options),
         _ => null
     };
 
     if (submissionEvent == null) return Results.BadRequest();
 
-    logger.LogInformation("Received event: {eventType}", submissionEvent.GetType().Name);
+    var payload = JsonSerializer.Serialize(submissionEvent, options);
+
+    logger.LogInformation("Received event {eventType} \n {payload}", submissionEvent.GetType().Name, payload);
 
     return Results.NoContent();
 });

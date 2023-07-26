@@ -24,6 +24,8 @@ internal abstract record SubmissionEvent
     public required long CreatedAt { get; init; }
 }
 
+internal record TestEvent : SubmissionEvent;
+
 internal record SubmissionCreated : SubmissionEvent
 {
     public required Severity Severity { get; init; }
@@ -36,7 +38,6 @@ internal record SubmissionSeverityChanged : SubmissionEvent
     public required string UserRole { get; init; }
     public required Severity FromSeverity { get; init; }
     public required Severity ToSeverity { get; init; }
-    public required string SeverityVector { get; init; }
 }
 
 internal record SubmissionStatusChanged : SubmissionEvent
