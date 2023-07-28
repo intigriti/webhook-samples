@@ -2,5 +2,5 @@
 
 public class Settings
 {
-    public string Secret { get; set; }
+    public string? Secret { get; set; }
 }
