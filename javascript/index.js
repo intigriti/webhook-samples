@@ -8,14 +8,20 @@ const port = 7709
 // The secret should be stored in a secure way, this is just a sample
 const secret = "The secret provided by Intigriti"
 
-app.use(bodyParser.json())
+// We need to access the raw body to verify our signature
+app.use(bodyParser.json({  
+        verify: function (req, res, buf) {
+            req.rawBody = buf.toString();
+        }
+    })
+)
 app.post("/", (req, res) => {
 
     // Get the signature that Intigriti calculated
     let actualDigest = req.headers["x-intigriti-digest"]
 
     // Recalculate the signature with the secret that Intigriti provided
-    let expectedDigest = computeSignature(JSON.stringify(req.body), secret)
+    let expectedDigest = computeSignature(req.rawBody, secret)
 
     // Check signature
     if (expectedDigest !== actualDigest) {
