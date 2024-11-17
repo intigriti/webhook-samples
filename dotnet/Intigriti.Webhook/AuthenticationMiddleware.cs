@@ -6,25 +6,30 @@ namespace Intigriti.Webhook;
 
 public class AuthenticationMiddleware
 {
-    private readonly RequestDelegate _next;
-    private readonly string _secret;
+    private const string SignatureHeaderKey = "x-intigriti-digest";
 
-    public AuthenticationMiddleware(RequestDelegate next, IOptions<Settings> settings)
+    private readonly string _secret;
+    private readonly ILogger<AuthenticationMiddleware> _logger;    
+    private readonly RequestDelegate _next;
+
+    public AuthenticationMiddleware(IOptions<WebhookSettings> settings, ILogger<AuthenticationMiddleware> logger, RequestDelegate next)
     {
+        _secret = settings.Value.Secret;
+        _logger = logger;
         _next = next;
-        _secret = settings.Value.Secret ?? throw new ArgumentNullException(nameof(_secret));
     }
 
     public async Task Invoke(HttpContext ctx)
     {
         var body = await GetRequestBodyAsync(ctx.Request);
 
-        var actualSignature = ctx.Request.Headers["x-intigriti-digest"].ToString();
+        var actualSignature = ctx.Request.Headers[SignatureHeaderKey].ToString();
         var expectedSignature = ComputeSignature(body, _secret);
 
         if (!actualSignature.Equals(expectedSignature))
         {
-            ctx.Response.StatusCode = 401;
+            _logger.LogInformation("Invalid signature");
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
         }
 
@@ -33,9 +38,9 @@ public class AuthenticationMiddleware
 
     private static string ComputeSignature(string content, string secret)
     {
-        using var hmacsha256 = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
         var bytes = Encoding.UTF8.GetBytes(content);
-        var hashedBytes = hmacsha256.ComputeHash(bytes);
+        var hashedBytes = hmac.ComputeHash(bytes);
         return Convert.ToBase64String(hashedBytes);
     }
 
@@ -45,7 +50,7 @@ public class AuthenticationMiddleware
             request.EnableBuffering();
 
         request.Body.Position = 0;
-        var reader = new StreamReader(request.Body);
+        using var reader = new StreamReader(request.Body);
         var body = await reader.ReadToEndAsync().ConfigureAwait(false);
         request.Body.Position = 0;
 
