@@ -1,6 +1,6 @@
-const express = require("express");
-const crypto = require("crypto");
-const bodyParser = require("body-parser");
+import express from "express";
+import { createHmac } from "crypto";
+import { json } from "body-parser";
 
 const app = express();
 const port = 7709;
@@ -9,7 +9,7 @@ const port = 7709;
 const secret = "The secret provided by Intigriti";
 
 // We need to access the raw body to verify our signature
-app.use(bodyParser.json({
+app.use(json({
     verify: function (req, res, buf) {
         req.rawBody = buf.toString();
     }
@@ -40,7 +40,7 @@ app.post("/", (req, res) => {
 app.listen(port, () => console.log(`Server running on port ${port}`));
 
 function computeSignature(body, secret) {
-    let hmac = crypto.createHmac('SHA256', secret);
+    let hmac = createHmac('SHA256', secret);
     hmac.update(body);
     return hmac.digest().toString('base64');
 }
