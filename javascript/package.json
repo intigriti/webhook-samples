@@ -6,7 +6,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "body-parser": "^2.2.2",
+    "body-parser": "^2.3.0",
     "express": "^5.2.1"
   }
 }
